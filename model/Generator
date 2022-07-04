@@ -11,7 +11,7 @@ class Generator(tf.keras.Model):
     # def __init__(self, num_class: int, num_pei_channel: int, view_dim: int):
     def __init__(self, ch):
         super(Generator, self).__init__()
-
+        self.concatenate = layers.concatenate
         self.conv0 = layers.Conv2D(filters=ch*2, kernel_size=(7, 7),
                                    strides=2, padding='same', name='conv0', use_bias=False)
         self.IN0 = tfa.layers.InstanceNormalization()
@@ -40,6 +40,7 @@ class Generator(tf.keras.Model):
         self.ReLU2 = layers.ReLU()
 
     def call(self, input):
+        x = self.concatenate(input)
         x = self.conv0(input)
         x = self.IN0(x)
         x = self.ReLU0(x)
@@ -63,9 +64,12 @@ class Generator(tf.keras.Model):
 
         return x
 
-    def model(self, inputsize: int) -> tf.keras.models:
+    def model(self, inputsize: int, labelsize: int) -> tf.keras.models:
+        
         input = tf.keras.Input(
             shape=(inputsize[0], inputsize[1], inputsize[2]), name='input_layer')
-        model = tf.keras.models.Model(inputs=input, outputs=self.call(input))
+        label = tf.keras.Input(
+            shape=(labelsize[0]), name='label_layer')
+        model = tf.keras.models.Model(inputs=[input, label], outputs=self.call(input))
         plot_model(model, to_file='model.png', show_shapes=True)
         return model
