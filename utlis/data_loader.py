@@ -3,7 +3,6 @@ import numpy as np
 import tensorflow as tf
 
 
-
 class GenericTFLoader():
     '''
     load tfrecord data.
@@ -25,26 +24,23 @@ class GenericTFLoader():
     #         loader_subclass()
 
 
-
-class OU_MVLP_triplet(GenericTFLoader):
+class OU_MVLP_multi_view(GenericTFLoader):
 
     def __init__(self, config):
         self._config = config
-        self.strategy = tf.distribute.MirroredStrategy(devices=["GPU:0", "GPU:1"], cross_device_ops=tf.distribute.HierarchicalCopyAllReduce())
+        self.strategy = tf.distribute.MirroredStrategy(
+            devices=["GPU:0", "GPU:1"], cross_device_ops=tf.distribute.HierarchicalCopyAllReduce())
 
     def read(self):
 
-        
-        BATCH_SIZE = self._config['training_info']['batch_size']  # per replica batch size
+        # per replica batch size
+        BATCH_SIZE = self._config['training_info']['batch_size']
 
         # initialize tf.distribute.MirroredStrategy
-        
+
         GLOBAL_BATCH_SIZE = self.strategy.num_replicas_in_sync * BATCH_SIZE
 
         print(f'Number of devices: {self.strategy.num_replicas_in_sync}')
-
-
-
 
         AUTOTUNE = tf.data.experimental.AUTOTUNE
         data_set = tf.data.TFRecordDataset(
@@ -56,7 +52,8 @@ class OU_MVLP_triplet(GenericTFLoader):
         data_batch = data_set.batch(
             GLOBAL_BATCH_SIZE, drop_remainder=True)
         data_batch = data_batch.prefetch(buffer_size=AUTOTUNE)
-        data_batch_ds = self.strategy.experimental_distribute_dataset(data_batch)
+        data_batch_ds = self.strategy.experimental_distribute_dataset(
+            data_batch)
 
         return data_batch_ds
 
@@ -68,17 +65,30 @@ class OU_MVLP_triplet(GenericTFLoader):
                 [], self._config['feature'][key]) for key in self._config['feature']}
 
         )
+        img1 = features['img1']
+        img2 = features['img2']
 
-        imgs = features['imgs']
+        angle1 = features['angle1']
+        angle2 = features['angle2']
         subject = features['subject']
-        angles = features['angles']
 
-        imgs = tf.io.decode_raw(imgs, tf.float32)
-        imgs = tf.reshape(imgs,  (self._config['resolution']['k'], 128, 88, 3))
-        imgs = imgs /255.
+        img1 = tf.io.decode_raw(img1, np.float32)
+        img2 = tf.io.decode_raw(img2, np.float32)
 
-        subject = tf.io.decode_raw(subject, tf.float32)
-        subject = tf.reshape(subject, (4,))
-        
+        angle1 = tf.io.decode_raw(angle1, np.float64)
+        angle2 = tf.io.decode_raw(angle2, np.float64)
 
-        return [imgs, subject]
+        subject = tf.io.decode_raw(subject, np.float32)
+
+        img1 = tf.reshape(img1, (128, 88, 3))
+        img2 = tf.reshape(img2, (128, 88, 3))
+
+        img1 = (img1 - 127.5) / 127.5
+        img2 = (img2 - 127.5) / 127.5
+
+        angle1 = tf.reshape(angle1, (14, 1))
+        angle2 = tf.reshape(angle2, (14, 1))
+
+        subject = tf.reshape(subject, (1,))
+
+        return [img1, img2, angle1, angle2, subject]

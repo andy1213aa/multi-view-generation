@@ -36,7 +36,7 @@ class Generator(tf.keras.Model):
         self.conv2 = layers.Conv2D(filters=ch*2, kernel_size=(7, 7),
                                    strides=2, padding='same', name='conv2', use_bias=False)
         self.IN2 = tfa.layers.InstanceNormalization()
-        self.ReLU2 = layers.ReLU()
+        self.tanh = layers.activation('tanh')
 
     def call(self, input):
         x = self.concatenate(input)
@@ -59,7 +59,7 @@ class Generator(tf.keras.Model):
         x = self.ReLU2(x)
         x = self.conv2(x)
         x = self.IN2(x)
-        x = self.ReLU2(x)
+        x =  self.tanh(x)
 
         return x
 
@@ -68,8 +68,8 @@ class Generator(tf.keras.Model):
         input = tf.keras.Input(
             shape=(inputsize[0], inputsize[1], inputsize[2]), name='input_layer')
         label = tf.keras.Input(
-            shape=(labelsize[0]), name='label_layer')
+            shape=(labelsize, ), name='label_layer')
         model = tf.keras.models.Model(
-            inputs=[input, label], outputs=self.call(input))
+            inputs=[input, label], outputs=self.call([input, label]))
         plot_model(model, to_file='model.png', show_shapes=True)
         return model

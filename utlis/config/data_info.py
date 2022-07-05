@@ -56,9 +56,11 @@ OU_MVLP_triplet_train = {
 OU_MVLP_multi_view_train = {
 
     "feature": {
-        "imgs": tf.string,
-        "subject": tf.string,
-        "angles": tf.string
+        "img1": tf.string,
+        "img2": tf.string,
+        "angle1": tf.string,
+        "angle2": tf.string,
+        "subject": tf.string
         
     },
 
@@ -70,9 +72,9 @@ OU_MVLP_multi_view_train = {
     },
 
     "training_info": {
-        "tfrecord_path": '/home/aaron/Desktop/Aaron/College-level_Applied_Research/tfrecord/OUMVLP_Triplet/triplet_train_4inPerson.tfrecords',
-        "data_num": 50000,
-        "batch_size": 16,
+        "tfrecord_path": '/home/aaron/Desktop/Aaron/College-level_Applied_Research/tfrecord/OUMVLP_multiview/multi_view_gait_train.tfrecords',
+        "data_num": 100000,
+        "batch_size": 64,
         "shuffle": True
     }
 }
