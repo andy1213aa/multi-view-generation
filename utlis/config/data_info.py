@@ -52,3 +52,27 @@ OU_MVLP_triplet_train = {
         "shuffle": True
     }
 }
+
+OU_MVLP_multi_view_train = {
+
+    "feature": {
+        "imgs": tf.string,
+        "subject": tf.string,
+        "angles": tf.string
+        
+    },
+
+    "resolution": {
+        "height": 128,
+        "width": 88,
+        "channel": 3,
+        "angle_nums": 14,
+    },
+
+    "training_info": {
+        "tfrecord_path": '/home/aaron/Desktop/Aaron/College-level_Applied_Research/tfrecord/OUMVLP_Triplet/triplet_train_4inPerson.tfrecords',
+        "data_num": 50000,
+        "batch_size": 16,
+        "shuffle": True
+    }
+}

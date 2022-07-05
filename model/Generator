@@ -1,4 +1,3 @@
-from matplotlib.ft2font import KERNING_UNSCALED
 import tensorflow as tf
 from tensorflow.keras import layers, initializers
 import tensorflow_addons as tfa
@@ -65,11 +64,12 @@ class Generator(tf.keras.Model):
         return x
 
     def model(self, inputsize: int, labelsize: int) -> tf.keras.models:
-        
+
         input = tf.keras.Input(
             shape=(inputsize[0], inputsize[1], inputsize[2]), name='input_layer')
         label = tf.keras.Input(
             shape=(labelsize[0]), name='label_layer')
-        model = tf.keras.models.Model(inputs=[input, label], outputs=self.call(input))
+        model = tf.keras.models.Model(
+            inputs=[input, label], outputs=self.call(input))
         plot_model(model, to_file='model.png', show_shapes=True)
         return model

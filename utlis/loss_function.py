@@ -1,7 +1,25 @@
 import tensorflow as tf
-from tensorflow_triplet_loss.model import triplet_loss
 
+def generator_loss(fake_logit):
+    loss = tf.math.reduce_mean(tf.math.log(1-fake_logit))
+    return loss
 
-def GaitSimpleNet_Loss(imgs_embedding,subject):
-    loss = triplet_loss.batch_hard_triplet_loss(subject, imgs_embedding, margin=0.8)
+def discriminator_loss(real_logit, fake_logit):
+    loss = -tf.math.reduce_mean(tf.math.log(real_logit)) - tf.math.reduce_mean(tf.math.log(1-fake_logit))
+    return loss
+
+def real_view_classification_loss(real_view_logit):
+    loss = -tf.math.reduce_mean(tf.math.log(real_view_logit))
+    return loss
+
+def fake_view_classification_loss(fake_view_logit):
+    loss = tf.math.reduce_mean(-tf.math.log(fake_view_logit))
+    return loss
+
+def cycle_consistency_loss(X, fake):
+    loss = tf.math.reduce_mean(tf.abs(X-fake))
+    return loss
+
+def identification_loss(real_logit, fake_logit):
+    loss = tf.math.reduce_mean(tf.math.log(real_logit)) + tf.math.reduce_mean(tf.math.log(1-fake_logit))
     return loss

@@ -6,19 +6,27 @@ from shutil import copytree, copyfile
 from pathlib import Path
 
 # Dont show warning about:
-# WARNING:absl:Found untraced functions such as conv1_1_layer_call_fn, conv1_1_layer_call_and_return_conditional_losses, _jit_compiled_convolution_op, 
-# leakyReLU1_1_layer_call_fn, leakyReLU1_1_layer_call_and_return_conditional_losses 
+# WARNING:absl:Found untraced functions such as conv1_1_layer_call_fn, conv1_1_layer_call_and_return_conditional_losses, _jit_compiled_convolution_op,
+# leakyReLU1_1_layer_call_fn, leakyReLU1_1_layer_call_and_return_conditional_losses
 # while saving (showing 5 of 60). These functions will not be directly callable after loading.
 # >>>>>>
 import absl.logging
 absl.logging.set_verbosity(absl.logging.ERROR)
 # <<<<<<
 
+
 class Save_Model(tf.keras.callbacks.Callback):
-    def __init__(self, GaitNet, info, mode='min', save_weights_only=False):
+    def __init__(self, models: dict, info, mode='min', save_weights_only=False):
         super(Save_Model, self).__init__()
 
-        self.GaitNet = GaitNet
+        '''
+        Input:
+            models: {model name: model object}
+            (ex. {'Generator': some keras model}
+        mode: 
+            not use for now.
+        '''
+        self.models = models
         log_path = info['save_model']['logdir']
         # setting directory of saving weight
         # self.dataSetConfig = dataSetConfig
@@ -39,33 +47,31 @@ class Save_Model(tf.keras.callbacks.Callback):
         startingTime = datetime.datetime.now()
         startingDate = f'{startingTime.year}_{startingTime.month}_{startingTime.day}' + \
             '_'+f'{startingTime.hour}_{startingTime.minute}'
-        self.startingDate = startingDate #log starting date
-        
+        self.startingDate = startingDate  # log starting date
         os.mkdir(f"{log_path}/{startingDate}")
 
-        self.GaitNetDir = f"{log_path}/{startingDate}/GaitNet/"
+        self.modelDir = {}
+        for model_name in models.keys():
+            self.modelDir[model_name] = f"{log_path}/{startingDate}/model_name/"
 
-
-
-        if not os.path.isdir(f"{log_path}/{startingDate}/GaitNet/"):
-            os.mkdir(f"{log_path}/{startingDate}/GaitNet/")
-
-
+            if not os.path.isdir(f"{log_path}/{startingDate}/model_name/"):
+                os.mkdir(f"{log_path}/{startingDate}/model_name/")
 
         work_dir = os.path.abspath('')
         copytree(f'{work_dir}/model',
                  f'{log_path}/{startingDate}/model')
         copytree(f'{work_dir}/utlis',
                  f'{log_path}/{startingDate}/utlis')
-
         copyfile(
             f'{work_dir}/main.py', f'{log_path}/{startingDate}/main.py')
 
     def save(self):
         if self.save_weights_only:
-            self.GaitNet.save_weights(self.GaitNetDir + "trained_ckpt")
+            for model_name, model in self.models.items():
+                model.save_weights(self.modelDir[model_name] + "trained_ckpt")
         else:
-            self.GaitNet.save(self.GaitNetDir + "trained_ckpt")
+            for model_name, model in self.models.items():
+                model.save(self.modelDir[model_name] + "trained_ckpt")
 
     # def save_config(self, monitor_value):
     #     saveLogTxt = f"""
