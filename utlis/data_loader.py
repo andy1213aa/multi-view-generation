@@ -48,7 +48,7 @@ class OU_MVLP_multi_view(GenericTFLoader):
         data_set = data_set.map(self.parse, num_parallel_calls=AUTOTUNE)
         data_set = data_set.cache()
         data_set = data_set.shuffle(
-            10000, reshuffle_each_iteration=self._config['training_info']['shuffle'])
+            1000, reshuffle_each_iteration=self._config['training_info']['shuffle'])
         data_batch = data_set.batch(
             GLOBAL_BATCH_SIZE, drop_remainder=True)
         data_batch = data_batch.prefetch(buffer_size=AUTOTUNE)
@@ -70,25 +70,43 @@ class OU_MVLP_multi_view(GenericTFLoader):
 
         angle1 = features['angle1']
         angle2 = features['angle2']
-        subject = features['subject']
+        # subject = features['subject']
 
         img1 = tf.io.decode_raw(img1, np.float32)
         img2 = tf.io.decode_raw(img2, np.float32)
 
-        angle1 = tf.io.decode_raw(angle1, np.float64)
-        angle2 = tf.io.decode_raw(angle2, np.float64)
+        angle1 = tf.io.decode_raw(angle1, np.float32)
+        angle2 = tf.io.decode_raw(angle2, np.float32)
 
-        subject = tf.io.decode_raw(subject, np.float32)
+        # subject = tf.io.decode_raw(subject, np.float32)
 
-        img1 = tf.reshape(img1, (128, 88, 3))
-        img2 = tf.reshape(img2, (128, 88, 3))
+        img1 = tf.reshape(img1, (self._config['resolution']['height'],
+                          self._config['resolution']['width'], self._config['resolution']['channel']))
+        img2 = tf.reshape(img2, (self._config['resolution']['height'],
+                          self._config['resolution']['width'], self._config['resolution']['channel']))
 
         img1 = (img1 - 127.5) / 127.5
         img2 = (img2 - 127.5) / 127.5
 
-        angle1 = tf.reshape(angle1, (14, 1))
-        angle2 = tf.reshape(angle2, (14, 1))
+        angle1 = tf.reshape(
+            angle1, (1, 1, self._config['resolution']['angle_nums']))
+        angle2 = tf.reshape(
+            angle2, (1, 1, self._config['resolution']['angle_nums']))
 
-        subject = tf.reshape(subject, (1,))
+        angle1 = tf.repeat(
+            angle1, repeats=self._config['resolution']['height'], axis=0)
+        angle2 = tf.repeat(
+            angle2, repeats=self._config['resolution']['height'], axis=0)
 
-        return [img1, img2, angle1, angle2, subject]
+        angle1 = tf.repeat(
+            angle1, repeats=self._config['resolution']['width'], axis=1)
+        angle2 = tf.repeat(
+            angle2, repeats=self._config['resolution']['width'], axis=1)
+
+        # subject = tf.reshape(subject, (1,))
+
+        print(img1.shape)
+        print(angle1.shape)
+        
+
+        return [img1, img2, angle1, angle2]

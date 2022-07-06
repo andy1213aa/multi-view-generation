@@ -20,16 +20,16 @@ def main():
         }
 
     @tf.function
-    def distributed_train_step(batch):
-        results = data_loader.strategy.run(train_step, args=(batch))
+    def distributed_train_step(source_img, target_img, source_angle, target_angle):
+        results = data_loader.strategy.run(train_step, args=(
+            source_img, target_img, source_angle, target_angle))
         results = reduce_dict(results)
         return results
 
-    def train_step(batch):
+    def train_step(source_img, target_img, source_angle, target_angle):
 
-        source_img, target_img, source_angle, target_angle = batch
         result = {}
-        with tf.GradientTape() as tape:
+        with tf.GradientTape(persistent=True) as tape:
 
             '''
             Cycle Consistency Loss
@@ -37,7 +37,7 @@ def main():
             fake_target_image = generator(
                 [source_img, target_angle], training=True)
             reconstruct_source_image = generator(
-                fake_target_image, source_angle, training=True)
+                [fake_target_image, source_angle], training=True)
             cycle_loss = utlis_loss.cycle_consistency_loss(
                 source_img, reconstruct_source_image)
 
@@ -48,7 +48,7 @@ def main():
             real_logit = discriminator(target_img, training=True)
             adversarial_generator_loss = utlis_loss.generator_loss(fake_logit)
             adversarial_discriminator_loss = utlis_loss.discriminator_loss(
-                real_logit)
+                real_logit, fake_logit)
 
             '''
             View Classification Loss
@@ -111,9 +111,9 @@ def main():
 
     with data_loader.strategy.scope():
 
-        generator = Generator(32).model((128, 88, 3), 14)
-        discriminator = Discriminator(32).model((128, 88, 3))
-        View_discriminator = Discriminator(32).model((128, 88, 3))
+        generator = Generator(1).model((128, 88, 3), 14)
+        discriminator = Discriminator(1).model((128, 88, 3))
+        View_discriminator = Discriminator(1).model((128, 88, 3))
         # # Identification_discriminator = Identification_discriminator(
         # 32).model((128, 88, 3))
 
@@ -145,8 +145,9 @@ def main():
     iteration = 0
     while iteration < 2000:
         for step, batch in enumerate(training_batch):
-
-            result = distributed_train_step(batch)
+            source_img, target_img, source_angle, target_angle = batch
+            result = distributed_train_step(
+                source_img, target_img, source_angle, target_angle)
             output_message = ''
 
             with summary_writer.as_default():
@@ -161,8 +162,8 @@ def main():
 
         iteration += 1
 
-        if iteration % 10 == 0:
-            source_img, target_img, source_angle, target_angle = batch
+        if iteration % 1 == 0:
+            # source_img, target_img, source_angle, target_angle = batch
             fake_target_img = generator([source_img, target_angle])
 
             rawImage = combineImages(target_img)

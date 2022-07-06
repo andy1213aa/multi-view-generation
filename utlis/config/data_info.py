@@ -2,7 +2,7 @@ import tensorflow as tf
 
 training_info = {
     'save_model': {
-        'logdir': '/home/aaron/Desktop/Aaron/College-level_Applied_Research/gait_log/gait_recognition'
+        'logdir': '/home/aaron/Desktop/Aaron/College-level_Applied_Research/gait_log/multi_view_gait_generation'
     }
 }
 
@@ -74,7 +74,7 @@ OU_MVLP_multi_view_train = {
     "training_info": {
         "tfrecord_path": '/home/aaron/Desktop/Aaron/College-level_Applied_Research/tfrecord/OUMVLP_multiview/multi_view_gait_train.tfrecords',
         "data_num": 100000,
-        "batch_size": 64,
+        "batch_size": 1,
         "shuffle": True
     }
 }

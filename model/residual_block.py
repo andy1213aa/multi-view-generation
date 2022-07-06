@@ -20,6 +20,9 @@ class Residual_Block(layers.Layer):
 
         self.IN2 = tfa.layers.InstanceNormalization()
 
+        if shortcut:
+            self.conv_shortcut = layers.Conv2D(out_shape,kernel_size=1,strides=1, padding='same', use_bias=False)
+    
     def call(self, inputs):
 
         x = self.conv1_1(inputs)
@@ -27,9 +30,10 @@ class Residual_Block(layers.Layer):
         x = self.ReLU1_1(x)
 
         x = self.conv1_2(x)
-        x - self.IN2
+        x = self.IN2(x)
 
         if self.shortcut:
-            x = layers.add([x, inputs])
+            short_cut = self.conv_shortcut(inputs)
+            x = layers.add([x, short_cut])
 
         return x
